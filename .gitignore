@@ -1,0 +1,63 @@
+## Visual Studio / .NET build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ll]og/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.cache
+*.pdb
+*.ilk
+*.obj
+*.tmp
+*.log
+*.vspscc
+*.vssscc
+_ReSharper*/
+*.DotSettings.user
+.idea/
+
+## Tests
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+coverage*.json
+coverage*.xml
+
+## NuGet
+*.nupkg
+*.snupkg
+packages/
+!**/packages/build/
+project.lock.json
+project.fragment.lock.json
+
+## Packaging output (artifacts are published as GitHub Release assets, never committed)
+/release/
+/artifacts/
+installer/redist/
+installer/Output/
+
+## Secrets and local data (never commit)
+*.pfx
+*.p12
+*.snk
+*.key
+*.pem
+.env
+.env.*
+secrets.*
+settings.local.*
+Data/
+
+## OS
+Thumbs.db
+Desktop.ini
+.DS_Store

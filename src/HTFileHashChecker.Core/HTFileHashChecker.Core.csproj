@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Domain and application services: hashing, verification, manifests, reports, settings, logging.
+       No user-interface code lives here. -->
+  <PropertyGroup>
+    <RootNamespace>HTFileHashChecker.Core</RootNamespace>
+    <AssemblyName>HTFileHashChecker.Core</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Security" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="HTFileHashChecker.Tests" />
+  </ItemGroup>
+</Project>

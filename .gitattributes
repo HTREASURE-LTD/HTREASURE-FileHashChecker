@@ -1,0 +1,11 @@
+* text=auto
+*.cs text diff=csharp
+*.sln text eol=crlf
+*.csproj text eol=crlf
+*.iss text eol=crlf
+*.ps1 text eol=crlf
+*.png binary
+*.ico binary
+*.bmp binary
+# Test fixtures must keep their exact bytes (checksums depend on them).
+tests/**/Fixtures/** -text

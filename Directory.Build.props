@@ -1,0 +1,33 @@
+<Project>
+  <!-- Shared build settings for every HT File Hash Checker project. -->
+  <PropertyGroup>
+    <!-- .NET Framework 4.8: Windows 7 SP1, 8.1, 10 and 11 (see docs/ARCHITECTURE.md for why no 4.6.2 build). -->
+    <TargetFramework>net48</TargetFramework>
+    <!-- C# 7.3 is the .NET Framework default and keeps the solution buildable in older Visual Studio versions. -->
+    <LangVersion>7.3</LangVersion>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <!-- AnyCPU without Prefer32Bit: 64-bit process on x64 Windows, 32-bit process on x86 Windows. -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+
+    <Company>HTREASURE LTD</Company>
+    <Product>HT File Hash Checker</Product>
+    <Authors>HTREASURE LTD</Authors>
+    <Copyright>© 2026 HTREASURE LTD</Copyright>
+    <Description>Calculate, compare and verify file checksums (SHA-256, SHA-512, SHA-384, SHA-1, MD5).</Description>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InformationalVersion>1.0.0</InformationalVersion>
+    <NeutralLanguage>en-GB</NeutralLanguage>
+    <!-- Do not append the git commit hash to InformationalVersion (keeps "About" and reports stable). -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Lets the solution build on machines without the .NET Framework 4.8 targeting pack installed. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
