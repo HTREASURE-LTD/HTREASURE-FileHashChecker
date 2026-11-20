@@ -54,7 +54,15 @@ namespace HTFileHashChecker.Core.Processing
 
         public int Id { get; private set; }
         public string FullPath { get; private set; }
-        public string FileName { get { return System.IO.Path.GetFileName(FullPath); } }
+        /// <summary>Last path segment. Never throws, even for paths containing characters Windows rejects.</summary>
+        public string FileName
+        {
+            get
+            {
+                int i = FullPath.LastIndexOfAny(new[] { '\\', '/' });
+                return i >= 0 ? FullPath.Substring(i + 1) : FullPath;
+            }
+        }
         public ItemSource Source { get; private set; }
 
         /// <summary>Path relative to the folder or manifest it came from ('/' separators), when known.</summary>

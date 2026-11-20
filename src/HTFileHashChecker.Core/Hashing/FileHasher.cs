@@ -64,6 +64,9 @@ namespace HTFileHashChecker.Core.Hashing
             this.bufferSize = bufferSize;
         }
 
+        /// <summary>Tests only: report progress after every block instead of throttling.</summary>
+        internal bool ReportEveryBlock { get; set; }
+
         /// <summary>Hashes <paramref name="path"/>.</summary>
         /// <param name="requiredRoot">When set, the file's fully resolved path (after symbolic links and junctions)
         /// must lie inside this folder's resolved path; otherwise <see cref="PathOutsideRootException"/> is thrown.</param>
@@ -98,7 +101,7 @@ namespace HTFileHashChecker.Core.Hashing
                         hash.TransformBlock(buffer, 0, read, null, 0);
                         total += read;
                         cancellationToken.ThrowIfCancellationRequested();
-                        if (bytesProgress != null && stopwatch.ElapsedTicks - lastReport >= ProgressIntervalTicks)
+                        if (bytesProgress != null && (ReportEveryBlock || stopwatch.ElapsedTicks - lastReport >= ProgressIntervalTicks))
                         {
                             lastReport = stopwatch.ElapsedTicks;
                             bytesProgress.Report(total);

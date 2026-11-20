@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>HTFileHashChecker.Tests</RootNamespace>
+    <!-- Test code may use xUnit patterns the analyzers flag as style suggestions; keep real compiler warnings as errors. -->
+    <NoWarn>$(NoWarn);xUnit1031;xUnit1026</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\HTFileHashChecker.Core\HTFileHashChecker.Core.csproj" />
+    <ProjectReference Include="..\..\src\HTFileHashChecker.Windows\HTFileHashChecker.Windows.csproj" />
+    <ProjectReference Include="..\..\src\HTFileHashChecker.UI\HTFileHashChecker.UI.csproj" />
+  </ItemGroup>
+</Project>

@@ -254,7 +254,10 @@ namespace HTFileHashChecker.Core.Manifests
             var info = HashAlgorithms.Get(algorithm);
             if (!AllHex(hashText))
             {
-                error = "The hash value is not hexadecimal.";
+                error = format == ManifestLineFormat.Gnu
+                    ? "Not a checksum line (the first word is not a hexadecimal hash)."
+                    : "The hash value is not hexadecimal.";
+                kind = format == ManifestLineFormat.Gnu ? ManifestIssueKind.InvalidFormat : ManifestIssueKind.InvalidHash;
                 return false;
             }
             if (hashText.Length != info.HexLength)
