@@ -1,0 +1,21 @@
+HT File Hash Checker - Privacy information
+
+HT File Hash Checker does not collect, transmit or share personal data.
+
+- No telemetry, analytics, advertising or tracking.
+- Hashing, verification, manifests and reports work completely offline. File contents and hashes never leave
+  this computer.
+- Settings are stored only on this computer:
+    Installed:  %APPDATA%\HTREASURE LTD\HT File Hash Checker\settings.xml
+    Portable:   Data\settings.xml next to the program
+- Log files contain no file contents or hashes, are stored only on this computer and are deleted automatically
+  after the retention period you choose:
+    %LOCALAPPDATA%\HTREASURE LTD\HT File Hash Checker\Logs
+- Reports and checksum manifests are saved only where you choose.
+- The Security Advisory History reads advisory data bundled with this release. No advisory service is configured
+  for this version, so it makes no network connection.
+
+Setup connects to the internet only if this computer is missing the Microsoft .NET Framework, and only after you
+agree. It then downloads Microsoft's official installer from download.microsoft.com over HTTPS, checks its SHA-256
+fingerprint and Microsoft digital signature, and runs it. Nothing about you or this computer is sent to
+HTREASURE LTD.

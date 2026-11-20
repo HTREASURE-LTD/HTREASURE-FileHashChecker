@@ -255,6 +255,14 @@ namespace HTFileHashChecker.Tests
             user.Dispose();
             machine.Dispose();
             Registry.CurrentUser.DeleteSubKeyTree(scratch, false);
+            // Leave no empty parent keys behind in the user's registry.
+            foreach (var parent in new[] { @"Software\HTREASURE LTD\HTFileHashChecker.Tests", @"Software\HTREASURE LTD" })
+            {
+                using (var key = Registry.CurrentUser.OpenSubKey(parent))
+                    if (key == null || key.SubKeyCount > 0 || key.ValueCount > 0) continue;
+                try { Registry.CurrentUser.DeleteSubKey(parent, false); }
+                catch (InvalidOperationException) { }
+            }
         }
 
         private const string Exe = @"C:\Program Files\HTREASURE LTD\HT File Hash Checker\HTFileHashChecker.exe";

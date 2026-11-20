@@ -25,6 +25,10 @@ the template's branding components and of the standards' Security Advisory Histo
 | Self-test (`--selftest`) of both Release executables | Pass on Windows 11 Pro 10.0.26300, x64 |
 | Interface at 100% scaling, light and dark theme | Checked by screenshot on Windows 11 |
 | Windows 11 x64 | Verified on the development machine |
+| Installer, per-user mode ("only for me"): install, Explorer menu, shortcuts, upgrade, downgrade refusal, uninstall | 36/36 checks pass on Windows 11 |
+| Installer, all-users mode (administrator, Program Files) | **Not yet tested** (needs an elevated session) |
+| Installer .NET Framework download path (computer without .NET 4.8) | **Not yet tested** (needs a clean virtual machine) |
+| Portable edition: both builds run from the ZIP in portable mode, no registry or %APPDATA% writes | Verified on Windows 11 |
 | Windows 10, 8.1, 8.0, 7 SP1; x86; Arm64; 125/150/200% scaling | **Not yet tested** on real systems or virtual machines |
 
 Windows 7, 8 and 8.1 no longer receive security updates from Microsoft, and .NET Framework 4.6.1 is out of
