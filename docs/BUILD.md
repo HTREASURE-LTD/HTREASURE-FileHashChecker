@@ -14,7 +14,7 @@
 ## Get the source
 
 ```bash
-git clone --recurse-submodules https://github.com/HTREASURE-LTD/HTREASURE-FileHashChecker.git
+git clone -c core.longpaths=true --recurse-submodules https://github.com/HTREASURE-LTD/HTREASURE-FileHashChecker.git
 ```
 
 In an existing clone:
@@ -71,3 +71,10 @@ Review the diff before committing. `-Mode Verify` checks the pinned files withou
 
 See [CODE-SIGNING.md](CODE-SIGNING.md). The certificate and its password file live outside the repository
 (`C:\HTSoftware\signing` by default).
+
+## Long paths on Windows
+
+The branding kit in `external/HT-Software-Template` contains paths of about 150 characters. Git for Windows refuses
+paths longer than 260 characters unless `core.longpaths` is set, so the clone fails in a deeply nested folder
+("Filename too long"). Either clone into a short folder such as `C:\Dev`, or use `-c core.longpaths=true` as shown
+above (it applies to that clone only; `git config --global core.longpaths true` sets it permanently).

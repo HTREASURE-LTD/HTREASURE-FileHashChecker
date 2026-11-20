@@ -9,7 +9,7 @@ This is a proprietary HTREASURE LTD product. Contributions are made by HTREASURE
    and runs the HTREASURE standards CLI (`net10.0`).
 2. Clone with submodules:
    ```bash
-   git clone --recurse-submodules https://github.com/HTREASURE-LTD/HTREASURE-FileHashChecker.git
+   git clone -c core.longpaths=true --recurse-submodules https://github.com/HTREASURE-LTD/HTREASURE-FileHashChecker.git
    ```
 3. Build and test: see [docs/BUILD.md](docs/BUILD.md).
 

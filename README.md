@@ -69,7 +69,7 @@ See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) for what has and has not been
 ## Building from source
 
 ```bash
-git clone --recurse-submodules https://github.com/HTREASURE-LTD/HTREASURE-FileHashChecker.git
+git clone -c core.longpaths=true --recurse-submodules https://github.com/HTREASURE-LTD/HTREASURE-FileHashChecker.git
 ```
 
 ```bash
