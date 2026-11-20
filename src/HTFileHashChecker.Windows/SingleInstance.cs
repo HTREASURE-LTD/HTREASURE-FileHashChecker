@@ -55,7 +55,10 @@ namespace HTFileHashChecker.Windows
             if (onArguments == null) throw new ArgumentNullException("onArguments");
             listenCts = new CancellationTokenSource();
             var token = listenCts.Token;
-            listenTask = Task.Run(() => ListenLoop(onArguments, token));
+            // A dedicated thread (not the thread pool): the pipe must be listening at once, even when the pool is busy,
+            // because Explorer starts one process per selected file and they all forward their arguments here.
+            listenTask = Task.Factory.StartNew(() => ListenLoop(onArguments, token), CancellationToken.None,
+                TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         private void ListenLoop(Action<string[]> onArguments, CancellationToken token)
