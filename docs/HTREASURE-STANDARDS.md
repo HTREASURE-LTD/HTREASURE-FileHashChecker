@@ -34,8 +34,9 @@ Not ported, because the services do not exist yet (see *What is not done yet* in
 - the Software Update Service: **Check for Security Updates** says the update service is not configured and never downloads anything.
 
 When `HTAdvisoryServiceUrl` and `HTReleaseFeedUrl` are provisioned, these two pieces must be added to the port.
-The ports are candidates for moving into `ht-software-standards`, so that other .NET Framework products (for example
-HT ISO Ripper) can share them.
+The ports have been proposed for `ht-software-standards` (pull request #1, "Add .NET Framework (net461/net48) Security
+Advisory client for Windows 7 and 8"), so that other .NET Framework products such as HT ISO Ripper can share them. Once
+it is merged, this product will reference the central projects and the local copies will be removed.
 
 ## Where the standards appear in the application
 
