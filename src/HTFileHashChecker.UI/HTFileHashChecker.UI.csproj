@@ -4,21 +4,38 @@
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>HTFileHashChecker</AssemblyName>
     <RootNamespace>HTFileHashChecker.UI</RootNamespace>
-    <ApplicationIcon>..\..\assets\icons\htfilehashchecker.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <StartupObject>HTFileHashChecker.UI.Program</StartupObject>
     <AssemblyTitle>HT File Hash Checker</AssemblyTitle>
+    <!-- The executable icon comes from HTREASURE.Branding.targets (corporate icon until a product icon is generated
+         by the branding kit's build_brand.py; see docs/BRANDING.md). -->
+
+    <!-- HTREASURE standards (ht-software-standards/dotnet/build/HTREASURE.Standards.targets). -->
+    <HTAppId>ht-file-hash-checker</HTAppId>
+    <HTChannel>stable</HTChannel>
+    <HTPlatforms>windows-x64,windows-x86,windows-arm64</HTPlatforms>
+    <!-- Set to the signed HTTPS feeds once the advisory and release services are provisioned for this product. -->
+    <HTAdvisoryServiceUrl></HTAdvisoryServiceUrl>
+    <HTReleaseFeedUrl></HTReleaseFeedUrl>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+    <HTMinimumOsVersion>6.1.7601</HTMinimumOsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net461'">
+    <HTMinimumOsVersion>6.2.9200</HTMinimumOsVersion>
+    <!-- .NET Framework 4.6.1 does not know the WinForms DPI configuration section; it gets its own config file. -->
+    <AppConfig>App.net461.config</AppConfig>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\HTFileHashChecker.Core\HTFileHashChecker.Core.csproj" />
     <ProjectReference Include="..\HTFileHashChecker.Windows\HTFileHashChecker.Windows.csproj" />
+    <ProjectReference Include="..\HTREASURE.Branding.NetFramework\HTREASURE.Branding.NetFramework.csproj" />
+    <ProjectReference Include="..\HTREASURE.Standards.NetFramework\HTREASURE.Standards.NetFramework.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="HTFileHashChecker.Tests" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\..\assets\branding\ht_logo.png" LogicalName="HTFileHashChecker.UI.ht_logo.png" />
-    <EmbeddedResource Include="..\..\assets\branding\ht_logo_64.png" LogicalName="HTFileHashChecker.UI.ht_logo_64.png" />
-    <EmbeddedResource Include="..\..\assets\icons\htfilehashchecker.ico" LogicalName="HTFileHashChecker.UI.app.ico" />
+    <None Include="App.net461.config" />
   </ItemGroup>
 </Project>

@@ -17,6 +17,7 @@ using HTFileHashChecker.Core.Processing;
 using HTFileHashChecker.Core.Reports;
 using HTFileHashChecker.Core.Settings;
 using HTFileHashChecker.Windows;
+using HTREASURE.Branding.WinForms;
 
 namespace HTFileHashChecker.UI
 {
@@ -49,6 +50,7 @@ namespace HTFileHashChecker.UI
             WireEvents();
             ApplySettingsToUi();
             Theme.Apply(this, Palette.For(app.Settings.Theme));
+            ApplyBrandAccents();
             RestoreWindowPlacement();
             RefreshAll();
         }
@@ -112,7 +114,15 @@ namespace HTFileHashChecker.UI
             KeyDown += (s, e) => { if (e.KeyCode == Keys.Escape && IsBusy) { e.Handled = true; CancelRun(); } };
             Shown += OnShown;
             FormClosing += OnFormClosing;
-            DpiChanged += (s, e) => ScaleListColumns(e.DeviceDpiOld, e.DeviceDpiNew);
+#if NET47_OR_GREATER
+            // Per-monitor DPI (Windows 10 1703+): Windows rescales the window when it moves to another monitor;
+            // rescale the columns and refit the fixed size to the new screen.
+            DpiChanged += (s, e) =>
+            {
+                ScaleListColumns(e.DeviceDpiOld, e.DeviceDpiNew);
+                BeginInvoke((Action)FitToScreen);
+            };
+#endif
         }
 
         private void ApplySettingsToUi()
@@ -138,9 +148,16 @@ namespace HTFileHashChecker.UI
             cboAlgorithm.SelectedIndex = 0;
         }
 
+        /// <summary>Brand details the generic theme pass does not cover: the header subtitle and footer attribution.</summary>
+        private void ApplyBrandAccents()
+        {
+            headerSubtitle.ForeColor = Color.FromArgb(0xC9, 0xD4, 0xE5);
+            stsAttribution.ForeColor = Theme.Current.MutedText;
+        }
+
         private void OnShown(object sender, EventArgs e)
         {
-            ScaleListColumns(96, DeviceDpi);
+            ScaleListColumns(96, (int)Math.Round(CurrentScale() * 96));
             if (startup.Paths.Count > 0)
                 ReceiveArgumentsOnUiThread(startup.Paths, startup.Calculate);
             if (startup.Unknown.Count > 0)
@@ -1088,6 +1105,7 @@ namespace HTFileHashChecker.UI
             miThemeLight.Checked = theme == ThemePreference.Light;
             miThemeDark.Checked = theme == ThemePreference.Dark;
             Theme.Apply(this, Palette.For(theme));
+            ApplyBrandAccents();
             Theme.StyleToolStrip(listMenu, Theme.Current);
             Theme.StyleToolStrip(exportMenu, Theme.Current);
             UpdateAlgorithmNote();
@@ -1181,11 +1199,15 @@ namespace HTFileHashChecker.UI
             }
         }
 
+        /// <summary>Help > About > About this application: the standard HTREASURE About box.</summary>
         private void ShowAbout()
         {
-            using (var dlg = new AboutForm(app.Paths))
+            using (var dlg = new BrandAboutForm(AppInfo.ProductName, AppInfo.Version,
+                "Calculate, compare and verify file checksums using SHA-256, SHA-512, SHA-384, SHA-1 and MD5. Works offline."))
             {
-                Theme.Apply(dlg, Theme.Current);
+                dlg.AddDetail((Environment.Is64BitProcess ? "64-bit" : "32-bit") + " · .NET Framework " + AppInfo.TargetFrameworkDisplay
+                    + (app.Paths.IsPortable ? " · portable" : string.Empty) + " · " + AppInfo.Support);
+                dlg.AddLink("Licence and notices", (s, e) => AboutLinks.OpenLicence(dlg));
                 dlg.ShowDialog(this);
             }
         }
@@ -1198,17 +1220,62 @@ namespace HTFileHashChecker.UI
 
         // ------------------------------------------------------------------ window placement and closing
 
+        /// <summary>The window has a fixed size (no resizing, minimising or maximising). Only its position is remembered;
+        /// the size is fitted to the screen each time by <see cref="FitToScreen"/>.</summary>
         private void RestoreWindowPlacement()
         {
             var s = app.Settings;
             if (s.WindowWidth <= 0 || s.WindowHeight <= 0) return;
-            var bounds = new Rectangle(s.WindowLeft, s.WindowTop, s.WindowWidth, s.WindowHeight);
-            // Only restore if the window would be visible on a connected screen.
-            bool visible = Screen.AllScreens.Any(sc => sc.WorkingArea.IntersectsWith(new Rectangle(bounds.Left, bounds.Top, Math.Min(bounds.Width, 200), 40)));
-            if (!visible) return;
+            var probe = new Rectangle(s.WindowLeft, s.WindowTop, 200, 40);
+            // Only restore if the title area would be visible on a connected screen.
+            if (!Screen.AllScreens.Any(sc => sc.WorkingArea.IntersectsWith(probe))) return;
             StartPosition = FormStartPosition.Manual;
-            Bounds = new Rectangle(bounds.Location, new Size(Math.Max(bounds.Width, MinimumSize.Width), Math.Max(bounds.Height, MinimumSize.Height)));
-            if (s.WindowState == "Maximized") WindowState = FormWindowState.Maximized;
+            Location = new Point(s.WindowLeft, s.WindowTop);
+        }
+
+        /// <summary>
+        /// Fixes the window at its design size, reduced when the screen is smaller (for example 1366x768 laptops at 125%
+        /// scaling), and keeps it fully on the screen. The layout inside adapts to the size chosen here.
+        /// </summary>
+        internal void FitToScreen()
+        {
+            var area = Screen.FromPoint(new Point(Left + Width / 2, Top + 20)).WorkingArea;
+            float scale = CurrentScale();
+            var chrome = Size - ClientSize;
+            int width = Math.Min((int)(DesignClientSize.Width * scale) + chrome.Width, (int)(area.Width * 0.96));
+            int height = Math.Min((int)(DesignClientSize.Height * scale) + chrome.Height, (int)(area.Height * 0.96));
+            MinimumSize = Size.Empty;
+            MaximumSize = Size.Empty;
+            Size = new Size(width, height);
+            // Lock the size (FixedSingle already prevents dragging; this also blocks programmatic and snap resizing).
+            MinimumSize = Size;
+            MaximumSize = Size;
+            int x = Math.Max(area.Left, Math.Min(Left, area.Right - Width));
+            int y = Math.Max(area.Top, Math.Min(Top, area.Bottom - Height));
+            if (StartPosition == FormStartPosition.CenterScreen && !positioned)
+            {
+                x = area.Left + (area.Width - Width) / 2;
+                y = area.Top + (area.Height - Height) / 2;
+            }
+            Location = new Point(x, y);
+            positioned = true;
+        }
+
+        private bool positioned;
+
+        private float CurrentScale()
+        {
+#if NET47_OR_GREATER
+            return DeviceDpi / 96f;
+#else
+            using (var g = CreateGraphics()) return g.DpiX / 96f;
+#endif
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            FitToScreen();
         }
 
         private void OnFormClosing(object sender, FormClosingEventArgs e)
@@ -1227,12 +1294,12 @@ namespace HTFileHashChecker.UI
                 e.Cancel = true; // closes once the workers have stopped
                 return;
             }
-            var r = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;
-            app.Settings.WindowLeft = r.Left;
-            app.Settings.WindowTop = r.Top;
-            app.Settings.WindowWidth = r.Width;
-            app.Settings.WindowHeight = r.Height;
-            app.Settings.WindowState = WindowState == FormWindowState.Maximized ? "Maximized" : "Normal";
+            // Fixed-size window: only the position matters (width/height are kept so older settings files stay valid).
+            app.Settings.WindowLeft = Left;
+            app.Settings.WindowTop = Top;
+            app.Settings.WindowWidth = Width;
+            app.Settings.WindowHeight = Height;
+            app.Settings.WindowState = "Normal";
             app.Settings.DefaultAlgorithm = SelectedAlgorithm;
             string error;
             app.TrySaveSettings(out error);

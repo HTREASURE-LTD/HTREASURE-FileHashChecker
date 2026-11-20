@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    .NET Framework port of HTREASURE.Branding.Core + HTREASURE.Branding.WinForms
+    (HT-Software-Template/HTREASURE-Branding/IntegrationExamples/DotNet/src), for products that must run on Windows 7 and 8.
+    Same public API names (BrandInfo, BrandColors, BrandAssets, BrandWinForms, BrandFonts, BrandImageBox, BrandSplashForm,
+    BrandAboutForm). Assets are embedded from the branding kit exactly as the original does; nothing is copied or redrawn.
+  -->
+  <PropertyGroup>
+    <RootNamespace>HTREASURE.Branding</RootNamespace>
+    <AssemblyName>HTREASURE.Branding.NetFramework</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Description>HTREASURE LTD corporate branding for .NET Framework Windows Forms applications.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <HTAsset Include="$(HTBrandingRoot)brand.json" Folder="" />
+    <HTAsset Include="$(HTBrandingRoot)Logos\Horizontal\HTREASURE-logo-horizontal-color-1024w.png;$(HTBrandingRoot)Logos\Horizontal\HTREASURE-logo-horizontal-color-2048w.png;$(HTBrandingRoot)Logos\Horizontal\HTREASURE-logo-horizontal-color-dark-1024w.png;$(HTBrandingRoot)Logos\Horizontal\HTREASURE-logo-horizontal-color-dark-2048w.png" Folder="Logos/Horizontal/" />
+    <HTAsset Include="$(HTBrandingRoot)Logos\Monogram\HTREASURE-monogram-color-256.png;$(HTBrandingRoot)Logos\Monogram\HTREASURE-monogram-color-512.png" Folder="Logos/Monogram/" />
+    <HTAsset Include="$(HTBrandingRoot)Icons\Windows\HTREASURE.ico" Folder="Icons/Windows/" />
+    <HTAsset Include="$(HTBrandingRoot)Icons\Desktop\HTREASURE-icon-64.png;$(HTBrandingRoot)Icons\Desktop\HTREASURE-icon-128.png;$(HTBrandingRoot)Icons\Desktop\HTREASURE-icon-256.png" Folder="Icons/Desktop/" />
+    <HTAsset Include="$(HTBrandingRoot)SplashScreens\HTREASURE-splash-base-1280x720.png;$(HTBrandingRoot)SplashScreens\HTREASURE-splash-base-1920x1080.png" Folder="SplashScreens/" />
+    <HTAsset Include="$(HTBrandingRoot)Source\Fonts\Inter\Inter-Regular.ttf;$(HTBrandingRoot)Source\Fonts\Inter\Inter-SemiBold.ttf;$(HTBrandingRoot)Source\Fonts\Inter\OFL-LICENSE.txt" Folder="Fonts/" />
+    <EmbeddedResource Include="@(HTAsset)" LogicalName="HTREASURE.Assets/%(Folder)%(Filename)%(Extension)" Link="Assets\%(Folder)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="HTFileHashChecker.Tests" />
+  </ItemGroup>
+</Project>

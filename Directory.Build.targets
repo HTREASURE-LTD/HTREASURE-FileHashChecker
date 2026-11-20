@@ -1,0 +1,21 @@
+<Project>
+  <!-- Applies to this product's projects only. Projects inside the submodules (for example the ht-standards CLI, which
+       the standards targets build) also find this file by walking up the folders; they are left untouched. -->
+  <PropertyGroup>
+    <_HTThisProduct>$([System.String]::Copy('$(MSBuildProjectDirectory)\').StartsWith('$(MSBuildThisFileDirectory)external\', System.StringComparison.OrdinalIgnoreCase))</_HTThisProduct>
+  </PropertyGroup>
+
+  <!-- Official branding wiring: executable icon (corporate icon unless HTProductId is set). -->
+  <Import Project="$(HTBrandingRoot)IntegrationExamples\DotNet\Build\HTREASURE.Branding.targets"
+          Condition="'$(_HTThisProduct)' == 'False' and Exists('$(HTBrandingRoot)IntegrationExamples\DotNet\Build\HTREASURE.Branding.targets')" />
+
+  <!-- Mandatory HTREASURE standards: bundled advisory snapshot, ht-compatibility.json, embedded trusted keys.
+       Projects opt in by setting <HTAppId>. -->
+  <Import Project="$(HTStandardsRoot)dotnet\build\HTREASURE.Standards.targets"
+          Condition="'$(_HTThisProduct)' == 'False' and Exists('$(HTStandardsRoot)dotnet\build\HTREASURE.Standards.targets')" />
+
+  <Target Name="HTSubmodulesMissing" BeforeTargets="Build"
+          Condition="'$(_HTThisProduct)' == 'False' and (!Exists('$(HTBrandingRoot)brand.json') or !Exists('$(HTStandardsRoot)dotnet\build\HTREASURE.Standards.targets'))">
+    <Error Text="HTREASURE branding or standards not found under external\. Run:  git submodule update --init" />
+  </Target>
+</Project>

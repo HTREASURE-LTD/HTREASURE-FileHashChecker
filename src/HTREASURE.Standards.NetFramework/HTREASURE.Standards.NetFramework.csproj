@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    .NET Framework port of the client side of ht-software-standards (HTREASURE.Standards.Security, the runtime wiring of
+    HTREASURE.Standards.Updates and HTREASURE.Standards.WinForms), for products that must run on Windows 7 and 8.
+    Behaviour follows docs/SECURITY-ADVISORY-HISTORY.md and must pass security/test-fixtures/expected-statuses.json.
+    Not ported: the HTTPS advisory transport and the Software Update Service. No advisory service or release feed URL
+    has been provisioned (see the standards guide, "What is not done yet"); the UI reports them as not configured.
+  -->
+  <PropertyGroup>
+    <RootNamespace>HTREASURE.Standards</RootNamespace>
+    <AssemblyName>HTREASURE.Standards.NetFramework</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Description>HTREASURE Security Advisory History for .NET Framework Windows Forms applications.</Description>
+    <HTStandardsVersion>1.0.0</HTStandardsVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>HTStandardsVersion</_Parameter1>
+      <_Parameter2>$(HTStandardsVersion)</_Parameter2>
+    </AssemblyAttribute>
+    <InternalsVisibleTo Include="HTFileHashChecker.Tests" />
+  </ItemGroup>
+</Project>

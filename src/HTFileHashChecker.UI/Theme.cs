@@ -5,14 +5,17 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using HTFileHashChecker.Core.Settings;
+using HTREASURE.Branding.WinForms;
 
 namespace HTFileHashChecker.UI
 {
-    /// <summary>Colours for one theme. Brand colours come from the HTREASURE LTD palette.</summary>
+    /// <summary>Colours for one theme, built from the HTREASURE brand palette (HTREASURE-Branding/brand.json) and the
+    /// status colours of the HTREASURE standards (SecurityTheme).</summary>
     internal sealed class Palette
     {
-        public static readonly Color Navy = ColorTranslator.FromHtml("#0B3D91");
-        public static readonly Color Blue = ColorTranslator.FromHtml("#1976D2");
+        public static readonly Color DeepNavy = BrandWinForms.DeepNavy;            // #0B1F3A
+        public static readonly Color TechnologyBlue = BrandWinForms.TechnologyBlue; // #0B3D91
+        public static readonly Color ElectricBlue = BrandWinForms.ElectricBlue;     // #168BFF
 
         public bool IsDark;
         public Color Window;        // main background
@@ -37,40 +40,41 @@ namespace HTFileHashChecker.UI
         public static readonly Palette Light = new Palette
         {
             IsDark = false,
-            Window = ColorTranslator.FromHtml("#F3F6FA"),
+            Window = BrandWinForms.PageGrey,                       // #F4F6F9
             Surface = Color.White,
-            SurfaceAlt = ColorTranslator.FromHtml("#E3EEFB"),
-            Text = ColorTranslator.FromHtml("#1F2937"),
-            MutedText = ColorTranslator.FromHtml("#4B5563"),
-            Border = ColorTranslator.FromHtml("#C9D3E1"),
-            Header = Navy,
+            SurfaceAlt = ColorTranslator.FromHtml("#EAF3FF"),       // standards BlueBg
+            Text = DeepNavy,
+            MutedText = BrandWinForms.MutedText,                   // #5A6577
+            Border = BrandWinForms.SilverGrey,                     // #AAB4C3 (controls)
+            Header = DeepNavy,
             HeaderText = Color.White,
-            Primary = Navy,
+            Primary = TechnologyBlue,
             PrimaryHover = ColorTranslator.FromHtml("#0D4AB0"),
             PrimaryText = Color.White,
-            // Text-safe variants of the brand success/error/warning colours (WCAG AA on white).
-            Success = ColorTranslator.FromHtml("#1E7E34"),
-            Error = ColorTranslator.FromHtml("#C82333"),
-            Warning = ColorTranslator.FromHtml("#9A5B00"),
-            SuccessTint = ColorTranslator.FromHtml("#E6F4EA"),
-            ErrorTint = ColorTranslator.FromHtml("#FBE9EB"),
-            WarningTint = ColorTranslator.FromHtml("#FFF3E0"),
-            InfoTint = ColorTranslator.FromHtml("#E3EEFB"),
+            // Standards status colours (text-safe on white).
+            Success = ColorTranslator.FromHtml("#067647"),
+            Error = ColorTranslator.FromHtml("#B42318"),
+            Warning = ColorTranslator.FromHtml("#B54708"),
+            SuccessTint = ColorTranslator.FromHtml("#ECFDF3"),
+            ErrorTint = ColorTranslator.FromHtml("#FEF3F2"),
+            WarningTint = ColorTranslator.FromHtml("#FFF6E5"),
+            InfoTint = ColorTranslator.FromHtml("#EAF3FF"),
         };
 
         public static readonly Palette Dark = new Palette
         {
+            // Dark variant derived from Deep Navy, with the brand Edge and Silver Grey for lines and secondary text.
             IsDark = true,
-            Window = ColorTranslator.FromHtml("#14171C"),
-            Surface = ColorTranslator.FromHtml("#1E232B"),
-            SurfaceAlt = ColorTranslator.FromHtml("#2A313C"),
-            Text = ColorTranslator.FromHtml("#E6EAF0"),
-            MutedText = ColorTranslator.FromHtml("#A9B2BF"),
-            Border = ColorTranslator.FromHtml("#3A4350"),
-            Header = ColorTranslator.FromHtml("#0B2C66"),
+            Window = ColorTranslator.FromHtml("#0A1626"),
+            Surface = ColorTranslator.FromHtml("#11233D"),
+            SurfaceAlt = ColorTranslator.FromHtml("#193254"),
+            Text = ColorTranslator.FromHtml("#E8EDF5"),
+            MutedText = BrandWinForms.SilverGrey,                  // #AAB4C3
+            Border = BrandWinForms.Edge,                           // #3A5275
+            Header = DeepNavy,
             HeaderText = Color.White,
-            Primary = Blue,
-            PrimaryHover = ColorTranslator.FromHtml("#2A86E0"),
+            Primary = ColorTranslator.FromHtml("#1565C0"),          // brand blue lightened for contrast on dark surfaces
+            PrimaryHover = ColorTranslator.FromHtml("#1E77DA"),
             PrimaryText = Color.White,
             Success = ColorTranslator.FromHtml("#5BD27A"),
             Error = ColorTranslator.FromHtml("#FF7A85"),
@@ -101,7 +105,8 @@ namespace HTFileHashChecker.UI
 
     internal static class Theme
     {
-        public const string FontName = "Segoe UI";
+        /// <summary>Normal application UI font (brand guidance: Segoe UI for UI, Inter for branded surfaces).</summary>
+        public const string FontName = BrandFonts.ApplicationFontName;
 
         public static Palette Current = Palette.Light;
 
@@ -238,22 +243,10 @@ namespace HTFileHashChecker.UI
             }
         }
 
-        public static Image LoadImage(string name)
-        {
-            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("HTFileHashChecker.UI." + name);
-            if (stream == null) return null;
-            using (stream)
-            using (var temp = Image.FromStream(stream))
-            {
-                return new Bitmap(temp);
-            }
-        }
-
+        /// <summary>Product icon from the HTREASURE branding kit (shared instance; do not dispose).</summary>
         public static Icon LoadAppIcon()
         {
-            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("HTFileHashChecker.UI.app.ico");
-            if (stream == null) return null;
-            using (stream) return new Icon(stream);
+            return BrandWinForms.ProductIcon;
         }
 
         // ---- Native theming helpers (best effort; ignored on Windows versions without support)
@@ -310,8 +303,8 @@ namespace HTFileHashChecker.UI
             public override Color CheckBackground { get { return p.SurfaceAlt; } }
             public override Color CheckSelectedBackground { get { return p.SurfaceAlt; } }
             public override Color CheckPressedBackground { get { return p.SurfaceAlt; } }
-            public override Color StatusStripGradientBegin { get { return p.Surface; } }
-            public override Color StatusStripGradientEnd { get { return p.Surface; } }
+            public override Color StatusStripGradientBegin { get { return p.Window; } }
+            public override Color StatusStripGradientEnd { get { return p.Window; } }
             public override Color ToolStripBorder { get { return p.Border; } }
             public override Color ToolStripGradientBegin { get { return Bar; } }
             public override Color ToolStripGradientMiddle { get { return Bar; } }

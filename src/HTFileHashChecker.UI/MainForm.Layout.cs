@@ -4,6 +4,8 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using HTFileHashChecker.Core;
 using HTFileHashChecker.Core.Hashing;
+using HTREASURE.Branding.WinForms;
+using HTREASURE.Standards.WinForms;
 
 namespace HTFileHashChecker.UI
 {
@@ -25,7 +27,7 @@ namespace HTFileHashChecker.UI
         private TextBox txtExpected;
         private Button btnPaste, btnClearExpected;
         private Label lblResult;
-        internal Button btnCalculate, btnVerify, btnCancel, btnCopy, btnExport;
+        internal Button btnCalculate, btnVerify, btnCancel, btnCopy, btnExport, btnClose;
         private Label lblCounts;
         private ProgressBar pbFile, pbOverall;
         private Label lblFile, lblOverall;
@@ -47,8 +49,13 @@ namespace HTFileHashChecker.UI
             Font = Theme.BaseFont();
             Text = AppInfo.ProductName;
             Icon = Theme.LoadAppIcon();
-            MinimumSize = new Size(720, 540);
-            ClientSize = new Size(1120, 720);
+            // Fixed-size window without title-bar buttons (no minimise, maximise or close); the window is closed with
+            // the Close button in the app, File > Exit or Alt+F4. The size is fitted to the screen in OnLoad.
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            ControlBox = false;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            ClientSize = DesignClientSize;
             StartPosition = FormStartPosition.CenterScreen;
             AllowDrop = true;
             KeyPreview = true;
@@ -83,6 +90,11 @@ namespace HTFileHashChecker.UI
             PerformLayout();
         }
 
+        /// <summary>Logical (96 DPI) design size of the fixed window; reduced to fit smaller screens.</summary>
+        internal static readonly Size DesignClientSize = new Size(1120, 700);
+
+        /// <summary>Deep Navy product header, as in the HTREASURE application template: product icon, name (Inter
+        /// SemiBold) and description. The company attribution is in the footer.</summary>
         private TableLayoutPanel BuildHeader()
         {
             var h = new TableLayoutPanel
@@ -90,55 +102,50 @@ namespace HTFileHashChecker.UI
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                ColumnCount = 3,
+                ColumnCount = 2,
                 RowCount = 2,
-                Padding = new Padding(12, 8, 16, 8),
+                Padding = new Padding(16, 10, 16, 10),
                 Tag = Role.Header,
             };
             h.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             h.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            h.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            var logo = new PictureBox
+            var icon = new BrandImageBox
             {
-                Image = Theme.LoadImage("ht_logo_64.png"),
-                SizeMode = PictureBoxSizeMode.Zoom,
+                Image = BrandWinForms.ProductImage,
                 Size = new Size(44, 44),
-                Margin = new Padding(0, 0, 10, 0),
+                Margin = new Padding(0, 0, 14, 0),
                 AccessibleRole = AccessibleRole.Graphic,
-                AccessibleName = "HT File Hash Checker logo",
+                AccessibleName = "HT File Hash Checker icon",
                 Tag = Role.HeaderText,
             };
             var title = new Label
             {
                 Text = AppInfo.ProductName,
                 AutoSize = true,
-                Font = new Font("Segoe UI Semibold", 15F, FontStyle.Regular, GraphicsUnit.Point),
-                Margin = new Padding(0, 0, 0, 0),
+                Font = BrandFonts.BrandPoints(15F, true),
+                UseCompatibleTextRendering = true, // Inter is a private font: drawn with GDI+
+                Margin = new Padding(0, 0, 0, 1),
                 Tag = Role.HeaderText,
+                UseMnemonic = false,
             };
             var subtitle = new Label
             {
-                Text = "Calculate, compare and verify file checksums",
+                Text = "Calculate, compare and verify file checksums · SHA-256, SHA-512, SHA-384, SHA-1, MD5",
                 AutoSize = true,
-                Margin = new Padding(2, 0, 0, 0),
+                Margin = new Padding(1, 0, 0, 0),
+                ForeColor = Color.FromArgb(0xC9, 0xD4, 0xE5),
                 Tag = Role.HeaderText,
+                UseMnemonic = false,
             };
-            var company = new Label
-            {
-                Text = AppInfo.Publisher,
-                AutoSize = true,
-                Anchor = AnchorStyles.Right,
-                Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Regular, GraphicsUnit.Point),
-                Tag = Role.HeaderText,
-            };
-            h.Controls.Add(logo, 0, 0);
-            h.SetRowSpan(logo, 2);
+            h.Controls.Add(icon, 0, 0);
+            h.SetRowSpan(icon, 2);
             h.Controls.Add(title, 1, 0);
             h.Controls.Add(subtitle, 1, 1);
-            h.Controls.Add(company, 2, 0);
-            h.SetRowSpan(company, 2);
+            headerSubtitle = subtitle;
             return h;
         }
+
+        private Label headerSubtitle;
 
         private FlowLayoutPanel BuildToolbar()
         {
@@ -241,8 +248,9 @@ namespace HTFileHashChecker.UI
         private void PaintDropZone(object sender, PaintEventArgs e)
         {
             var r = dropZone.ClientRectangle;
-            r.Inflate(-LogicalToDeviceUnits(6), -LogicalToDeviceUnits(6));
-            using (var pen = new Pen(Theme.Current.Border, Math.Max(1, LogicalToDeviceUnits(2))) { DashStyle = DashStyle.Dash })
+            float scale = e.Graphics.DpiX / 96f; // works on .NET Framework 4.6.1 (Windows 8 build) and later
+            r.Inflate(-(int)(6 * scale), -(int)(6 * scale));
+            using (var pen = new Pen(Theme.Current.Border, Math.Max(1f, 2 * scale)) { DashStyle = DashStyle.Dash })
             {
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                 e.Graphics.DrawRectangle(pen, r);
@@ -324,9 +332,19 @@ namespace HTFileHashChecker.UI
 
         private TableLayoutPanel BuildProgress()
         {
-            var t = new TableLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, ColumnCount = 2, RowCount = 2, Margin = new Padding(0, 2, 0, 0) };
+            var t = new TableLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, ColumnCount = 3, RowCount = 2, Margin = new Padding(0, 2, 0, 0) };
             t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            t.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 260F));
+            t.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 240F));
+            t.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            // In-app Close button: the window has no title-bar buttons.
+            btnClose = Ui.Button("Close", Role.Secondary, "Close HT File Hash Checker (Alt+F4)");
+            btnClose.MinimumSize = new Size(100, 34);
+            btnClose.Margin = new Padding(16, 3, 0, 3);
+            btnClose.Anchor = AnchorStyles.Right | AnchorStyles.Bottom;
+            btnClose.Click += (s, e) => Close();
+            tips.SetToolTip(btnClose, "Close HT File Hash Checker (Alt+F4)");
+            t.Controls.Add(btnClose, 2, 0);
+            t.SetRowSpan(btnClose, 2);
             lblFile = new Label { AutoSize = true, AutoEllipsis = true, Dock = DockStyle.Fill, Margin = new Padding(0, 3, 8, 3), Text = "Current file: -", AccessibleName = "Current file progress" };
             lblOverall = new Label { AutoSize = true, AutoEllipsis = true, Dock = DockStyle.Fill, Margin = new Padding(0, 3, 8, 3), Text = "Overall: -", AccessibleName = "Overall progress" };
             pbFile = new ProgressBar { Dock = DockStyle.Fill, Maximum = 1000, Height = 16, Margin = new Padding(0, 3, 0, 3), AccessibleName = "Current file progress" };
@@ -338,15 +356,22 @@ namespace HTFileHashChecker.UI
             return t;
         }
 
+        /// <summary>Standard HTREASURE footer (BrandWinForms.CreateFooter): status on the left, the discreet company
+        /// attribution on the right, plus portable-mode and timing indicators.</summary>
         private StatusStrip BuildStatus()
         {
-            var s = new StatusStrip { SizingGrip = true, AccessibleName = "Status" };
-            stsText = new ToolStripStatusLabel { Spring = true, TextAlign = ContentAlignment.MiddleLeft, Text = "Ready" };
+            var s = BrandWinForms.CreateFooter("Ready");
+            s.AccessibleName = "Status";
+            stsText = (ToolStripStatusLabel)s.Items[0];
+            stsAttribution = (ToolStripStatusLabel)s.Items[1];
             stsMode = new ToolStripStatusLabel { Text = string.Empty };
             stsElapsed = new ToolStripStatusLabel { Text = string.Empty };
-            s.Items.AddRange(new ToolStripItem[] { stsText, stsMode, stsElapsed });
+            s.Items.Insert(1, stsMode);
+            s.Items.Insert(2, stsElapsed);
             return s;
         }
+
+        private ToolStripStatusLabel stsAttribution;
 
         private MenuStrip BuildMenu()
         {
@@ -406,6 +431,8 @@ namespace HTFileHashChecker.UI
                 Item("&Options...", Keys.Control | Keys.Oemcomma, (s, e) => ShowOptions()),
             });
 
+            // Help menu as defined by the HTREASURE standards:
+            //   Help > About > About this application | Security Advisory History, and Help > Security Advisories.
             var help = new ToolStripMenuItem("&Help");
             help.DropDownItems.AddRange(new ToolStripItem[]
             {
@@ -413,13 +440,13 @@ namespace HTFileHashChecker.UI
                 Item("About &Hash Algorithms", Keys.None, (s, e) => ShowHelp(HelpForm.Topic.Algorithms)),
                 Item("Checksum &Manifest Formats", Keys.None, (s, e) => ShowHelp(HelpForm.Topic.Manifests)),
                 new ToolStripSeparator(),
+                SecurityAdvisoryUi.CreateAdvisoriesMenuItem(this, () => app.Standards, Theme.LoadAppIcon()),
                 Item("Open &Log Folder", Keys.None, (s, e) => OpenLogFolder()),
+                new ToolStripSeparator(),
+                SecurityAdvisoryUi.CreateAboutMenu(this, ShowAbout, () => app.Standards, Theme.LoadAppIcon()),
             });
 
-            var about = new ToolStripMenuItem("&About");
-            about.DropDownItems.Add(Item("&About HT File Hash Checker...", Keys.None, (s, e) => ShowAbout()));
-
-            m.Items.AddRange(new ToolStripItem[] { file, tools, settings, help, about });
+            m.Items.AddRange(new ToolStripItem[] { file, tools, settings, help });
 
             listMenu = new ContextMenuStrip();
             listMenu.Items.AddRange(new ToolStripItem[]

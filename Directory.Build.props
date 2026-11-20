@@ -1,8 +1,32 @@
 <Project>
-  <!-- Shared build settings for every HT File Hash Checker project. -->
+  <!--
+    HT File Hash Checker - shared build settings.
+
+    HTREASURE standards are applied from the two company repositories, checked out as git submodules:
+      external/HT-Software-Template   HTREASURE-Branding kit (brand.json, logos, icons, splash, Inter, build files)
+      external/ht-software-standards  Security Advisory History registry, schemas, build targets and CLI
+    Clone with the "recurse-submodules" option of git clone, or run "git submodule update" with "init" afterwards.
+  -->
   <PropertyGroup>
-    <!-- .NET Framework 4.8: Windows 7 SP1, 8.1, 10 and 11 (see docs/ARCHITECTURE.md for why no 4.6.2 build). -->
-    <TargetFramework>net48</TargetFramework>
+    <HTBrandingRoot>$(MSBuildThisFileDirectory)external\HT-Software-Template\HTREASURE-Branding\</HTBrandingRoot>
+    <HTStandardsRoot>$(MSBuildThisFileDirectory)external\ht-software-standards\</HTStandardsRoot>
+  </PropertyGroup>
+
+  <!-- Official branding properties: Company, Authors, Copyright ("Copyright © <year> HTREASURE LTD. All rights reserved."),
+       NeutralLanguage and IncludeSourceRevisionInInformationalVersion. -->
+  <Import Project="$(HTBrandingRoot)IntegrationExamples\DotNet\Build\HTREASURE.Branding.props"
+          Condition="Exists('$(HTBrandingRoot)IntegrationExamples\DotNet\Build\HTREASURE.Branding.props')" />
+
+  <PropertyGroup>
+    <!--
+      Windows 7 SP1 / 8 / 8.1 / 10 / 11 compatibility.
+      The HTREASURE .NET 10 libraries need Windows 10 1809 or later, so this product uses .NET Framework ports of the
+      branding and Security Advisory History components (src/HTREASURE.*.NetFramework) and builds:
+        net48   main build: Windows 7 SP1, 8.1, 10, 11 (per-monitor DPI, long paths)
+        net461  compatibility build for Windows 8.0, where .NET Framework 4.8 (and 4.6.2+) cannot be installed
+      See docs/COMPATIBILITY.md.
+    -->
+    <TargetFrameworks>net461;net48</TargetFrameworks>
     <!-- C# 7.3 is the .NET Framework default and keeps the solution buildable in older Visual Studio versions. -->
     <LangVersion>7.3</LangVersion>
     <Deterministic>true</Deterministic>
@@ -12,22 +36,18 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
 
-    <Company>HTREASURE LTD</Company>
     <Product>HT File Hash Checker</Product>
-    <Authors>HTREASURE LTD</Authors>
-    <Copyright>© 2026 HTREASURE LTD</Copyright>
     <Description>Calculate, compare and verify file checksums (SHA-256, SHA-512, SHA-384, SHA-1, MD5).</Description>
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
     <InformationalVersion>1.0.0</InformationalVersion>
-    <NeutralLanguage>en-GB</NeutralLanguage>
-    <!-- Do not append the git commit hash to InformationalVersion (keeps "About" and reports stable). -->
-    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <!-- Fallback when the branding kit is not checked out (the build then stops with an error in Directory.Build.targets). -->
+    <Company Condition="'$(Company)' == ''">HTREASURE LTD</Company>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Lets the solution build on machines without the .NET Framework 4.8 targeting pack installed. -->
+    <!-- Lets the solution build on machines without the .NET Framework targeting packs installed. -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
 </Project>

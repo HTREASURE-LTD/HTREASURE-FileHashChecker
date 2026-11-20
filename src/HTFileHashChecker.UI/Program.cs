@@ -11,6 +11,9 @@ using HTFileHashChecker.Core.Logging;
 using HTFileHashChecker.Core.Processing;
 using HTFileHashChecker.Core.Settings;
 using HTFileHashChecker.Windows;
+using HTREASURE.Branding;
+using HTREASURE.Branding.WinForms;
+using HTREASURE.Standards;
 
 namespace HTFileHashChecker.UI
 {
@@ -24,6 +27,11 @@ namespace HTFileHashChecker.UI
         public ILogger Logger;
         public HashWorkspace Workspace;
         public ExplorerIntegration Explorer;
+
+        /// <summary>HTREASURE standards runtime (Security Advisory History), created on first use.</summary>
+        private Lazy<HTStandardsRuntime> standards;
+
+        public HTStandardsRuntime Standards { get { return standards.Value; } }
 
         public static AppServices Create(string executablePath, AppPaths paths)
         {
@@ -40,6 +48,8 @@ namespace HTFileHashChecker.UI
                 Logger = logger,
                 Workspace = new HashWorkspace(new BatchProcessor(new FileHasher(), logger)),
                 Explorer = new ExplorerIntegration(),
+                standards = new Lazy<HTStandardsRuntime>(() =>
+                    HTStandardsRuntime.FromAssembly(typeof(Program).Assembly, AppInfo.ProductName, Path.GetDirectoryName(executablePath))),
             };
         }
 
@@ -79,8 +89,14 @@ namespace HTFileHashChecker.UI
             if (cmd.SelfTestOutput != null)
                 return SelfTest.Run(cmd.SelfTestOutput, exePath, paths);
 
+#if !NET47_OR_GREATER
+            // Windows 8 build (.NET Framework 4.6.1 has no WinForms DPI configuration): system DPI awareness.
+            try { SetProcessDPIAware(); }
+            catch (EntryPointNotFoundException) { }
+#endif
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            BrandInfo.ProductAssembly = typeof(Program).Assembly;
 
             using (var single = new SingleInstance(InstanceId))
             {
@@ -91,13 +107,25 @@ namespace HTFileHashChecker.UI
                     // The first instance did not answer (busy or closing): continue as an independent window.
                 }
 
+                // HTREASURE splash screen during genuine start-up work. Skipped for Explorer "Calculate Hash" launches,
+                // which should open straight to the result.
+                BrandSplashForm splash = null;
+                if (cmd.Paths.Count == 0)
+                {
+                    splash = new BrandSplashForm(AppInfo.ProductName, AppInfo.Version);
+                    splash.Show();
+                    splash.Report(0.3, "Loading settings…");
+                }
+
                 AppServices services;
                 try
                 {
                     services = AppServices.Create(exePath, paths);
+                    if (splash != null) splash.Report(0.8, "Preparing workspace…");
                 }
                 catch (Exception ex)
                 {
+                    if (splash != null) splash.Dispose();
                     MessageBox.Show("HT File Hash Checker could not start: " + ex.Message, AppInfo.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return 1;
                 }
@@ -110,6 +138,11 @@ namespace HTFileHashChecker.UI
                 using (new Mutex(false, RunningMutexName))
                 using (var form = new MainForm(services, cmd))
                 {
+                    if (splash != null)
+                    {
+                        splash.Report(1.0, "Ready");
+                        form.Shown += (s, e) => splash.Dispose();
+                    }
                     single.StartListening(form.ReceiveArguments);
                     Application.Run(form);
                 }
@@ -117,6 +150,11 @@ namespace HTFileHashChecker.UI
             }
             return 0;
         }
+
+#if !NET47_OR_GREATER
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetProcessDPIAware();
+#endif
 
         private static int RunShellRegistration(CommandLine cmd, string exePath)
         {

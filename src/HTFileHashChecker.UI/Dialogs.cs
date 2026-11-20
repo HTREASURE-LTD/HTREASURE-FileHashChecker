@@ -471,59 +471,21 @@ LIMITATIONS
 Windows file names cannot contain line breaks, so escaped names containing \n or \r cannot match a file. File names that are not valid UTF-8 cannot be represented. Some tools write manifests in other conventions (for example hash and name separated by a tab, or Windows absolute paths); these are reported as invalid lines rather than guessed.";
     }
 
-    internal sealed class AboutForm : DialogBase
+    /// <summary>Opens the licence and third-party notices shipped next to the executable (read-only, in Notepad).</summary>
+    internal static class AboutLinks
     {
-        public AboutForm(AppPaths paths)
-        {
-            Text = "About " + AppInfo.ProductName;
-            var t = Grid(2);
-            t.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            t.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            var logo = new PictureBox { Image = Theme.LoadImage("ht_logo.png"), SizeMode = PictureBoxSizeMode.Zoom, Size = new Size(96, 96), Margin = new Padding(0, 0, 16, 0), AccessibleName = "Logo" };
-            var info = new Label
-            {
-                AutoSize = true,
-                MaximumSize = new Size(420, 0),
-                Text = AppInfo.ProductName + "\nVersion " + AppInfo.Version + "  (" + (Environment.Is64BitProcess ? "64-bit" : "32-bit") + (paths.IsPortable ? ", portable" : string.Empty) + ")\n\n"
-                    + AppInfo.Copyright + "\nPublished by " + AppInfo.Publisher + "\n\n"
-                    + "Calculates, compares and verifies file checksums using SHA-256, SHA-512, SHA-384, SHA-1 and MD5.\n\n"
-                    + "Works offline. No telemetry. No file contents or hashes leave this computer.\n\n"
-                    + ".NET Framework " + Environment.Version + " on " + Environment.OSVersion.VersionString,
-            };
-            var title = new Label { Text = AppInfo.ProductName, AutoSize = true, Font = new Font("Segoe UI Semibold", 14F), Margin = new Padding(0, 0, 0, 6) };
-            var stack = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = false };
-            info.Text = info.Text.Substring(AppInfo.ProductName.Length + 1);
-            stack.Controls.Add(title);
-            stack.Controls.Add(info);
-            var licence = new LinkLabel { Text = "View licence and third-party notices", AutoSize = true, Margin = new Padding(0, 8, 0, 0) };
-            licence.LinkClicked += (s, e) => OpenLicence();
-            stack.Controls.Add(licence);
-            t.Controls.Add(logo, 0, 0);
-            t.Controls.Add(stack, 1, 0);
-            var ok = Ui.Button("OK", Role.Primary, "Close");
-            ok.DialogResult = DialogResult.OK;
-            Controls.Add(t);
-            Controls.Add(Buttons(ok));
-            AcceptButton = ok;
-            CancelButton = ok;
-            AutoSize = true;
-            AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        }
-
-        private void OpenLicence()
+        public static void OpenLicence(IWin32Window owner)
         {
             string dir = Path.GetDirectoryName(Application.ExecutablePath);
             foreach (var name in new[] { "LICENSE.txt", "THIRD_PARTY_NOTICES.txt" })
             {
                 string p = Path.Combine(dir, name);
-                if (File.Exists(p))
-                {
-                    try { Process.Start(new ProcessStartInfo("notepad.exe", "\"" + p + "\"") { UseShellExecute = false }); }
-                    catch (System.ComponentModel.Win32Exception) { }
-                    return;
-                }
+                if (!File.Exists(p)) continue;
+                try { Process.Start(new ProcessStartInfo("notepad.exe", "\"" + p + "\"") { UseShellExecute = false }); }
+                catch (System.ComponentModel.Win32Exception) { }
+                return;
             }
-            MessageBox.Show(this, "The licence file was not found next to the program.", Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(owner, "The licence file was not found next to the program.", AppInfo.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }
