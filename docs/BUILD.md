@@ -23,6 +23,9 @@ In an existing clone:
 git submodule update --init
 ```
 
+The two submodules are **private** HTREASURE LTD repositories, so the clone needs an account with access to the
+HTREASURE-LTD organisation.
+
 ## Build and test
 
 ```bash
@@ -51,11 +54,15 @@ powershell -NoProfile -File scripts\build-release.ps1 -AdvisorySigningKey D:\off
 ```
 
 Internal test packages: `-InternalAdvisorySnapshot` instead of the key. Other options: `-SkipTests`,
-`-SkipCodeSigning`, `-SigningDir`.
+`-SkipCodeSigning`, `-SigningDir`, `-IncludeSubmodulesInSource`.
 
 The script builds, runs all tests, stages both builds, signs this product's executables and DLLs, compiles Setup (which
-signs Setup and the uninstaller), builds the portable, source (committed HEAD plus submodules) and documentation ZIPs, and
-writes `SHA256SUMS.txt` last. Output: `release\v<version>\` (not committed).
+signs Setup and the uninstaller), builds the portable, source and documentation ZIPs, and writes `SHA256SUMS.txt` last.
+Output: `release\v<version>\` (not committed).
+
+The source ZIP contains the committed HEAD of this repository only. The private HTREASURE submodules are left out and
+listed by commit in `external/SUBMODULES-NOT-INCLUDED.txt`, because this repository and its releases are public.
+`-IncludeSubmodulesInSource` adds them for internal archives; never attach such a package to a public release.
 
 ## Prerequisite manifest
 

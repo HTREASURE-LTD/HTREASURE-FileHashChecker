@@ -36,7 +36,7 @@ Each GitHub release provides:
 |---|---|
 | `HTFileHashChecker_Setup_v1.0.0.exe` | Installer (all users or only for you; installs .NET Framework from Microsoft only if missing and you agree) |
 | `HTFileHashChecker_Portable_v1.0.0.zip` | Portable edition: unzip and run, nothing installed |
-| `HTFileHashChecker_Source_v1.0.0.zip` | Source code, including the HTREASURE standards submodules |
+| `HTFileHashChecker_Source_v1.0.0.zip` | Source code (the private HTREASURE company submodules are not included) |
 | `HTFileHashChecker_Documentation_v1.0.0.zip` | This documentation |
 | `SHA256SUMS.txt` | SHA-256 of every file above |
 
@@ -67,6 +67,12 @@ See [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) for what has and has not been
 | [SECURITY.md](SECURITY.md), [CHANGELOG.md](CHANGELOG.md), [RELEASE_NOTES.md](RELEASE_NOTES.md) | Security policy and history |
 
 ## Building from source
+
+The build uses two private HTREASURE LTD repositories as git submodules (`external/HT-Software-Template` for the
+branding kit, `external/ht-software-standards` for the HTREASURE standards). Building therefore needs a GitHub account
+with access to the HTREASURE-LTD organisation; without it the clone succeeds but the submodules cannot be fetched and the
+build stops with "HTREASURE branding or standards not found". The released installer and portable edition need nothing
+extra.
 
 ```bash
 git clone -c core.longpaths=true --recurse-submodules https://github.com/HTREASURE-LTD/HTREASURE-FileHashChecker.git

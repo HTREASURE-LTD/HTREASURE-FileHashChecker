@@ -6,7 +6,8 @@
     Produces in release\v<version>\:
       HTFileHashChecker_Setup_v<version>.exe          Inno Setup installer (selects the .NET 4.8 or 4.6.1 build)
       HTFileHashChecker_Portable_v<version>.zip       portable edition (no installation, no registry changes)
-      HTFileHashChecker_Source_v<version>.zip         source of the committed HEAD, including the submodules
+      HTFileHashChecker_Source_v<version>.zip         source of the committed HEAD; the private HTREASURE submodules are
+                                                      left out (listed by commit) unless -IncludeSubmodulesInSource
       HTFileHashChecker_Documentation_v<version>.zip  user and technical documentation
       SHA256SUMS.txt                                  SHA-256 of the files above (GNU format), computed last
 
@@ -26,6 +27,8 @@ param(
     [switch]$InternalAdvisorySnapshot,
     [switch]$SkipCodeSigning,
     [switch]$SkipTests,
+    # Adds the private HTREASURE submodules to the source package. Internal use only: never attach to a public release.
+    [switch]$IncludeSubmodulesInSource,
     [string]$SigningDir = 'C:\HTSoftware\signing',
     [string]$Root = (Split-Path -Parent $PSScriptRoot)
 )
@@ -155,13 +158,27 @@ New-Item -ItemType Directory -Force $sdir | Out-Null
 $tar = Join-Path $stage 'source.tar'
 Run 'git' @('archive', '--format=tar', "--output=$tar", 'HEAD')
 Run 'tar' @('-xf', $tar, '-C', $sdir)
-foreach ($sub in (git submodule status | ForEach-Object { ($_.Trim() -split '\s+')[1] })) {
-    $subTar = Join-Path $stage 'sub.tar'
-    Run 'git' @('-C', $sub, 'archive', '--format=tar', "--output=$subTar", 'HEAD')
-    New-Item -ItemType Directory -Force (Join-Path $sdir $sub) | Out-Null
-    Run 'tar' @('-xf', $subTar, '-C', (Join-Path $sdir $sub))
+$subs = git submodule status | ForEach-Object { $p = $_.Trim() -split '\s+'; [pscustomobject]@{ Path = $p[1]; Commit = $p[0].TrimStart('+', '-', 'U') } }
+if ($IncludeSubmodulesInSource) {
+    # Internal packages only: the company submodules are private HTREASURE repositories.
+    Write-Warning 'The source package includes the private HTREASURE submodules. Do not attach it to a public release.'
+    foreach ($s in $subs) {
+        $subTar = Join-Path $stage 'sub.tar'
+        Run 'git' @('-C', $s.Path, 'archive', '--format=tar', "--output=$subTar", 'HEAD')
+        New-Item -ItemType Directory -Force (Join-Path $sdir $s.Path) | Out-Null
+        Run 'tar' @('-xf', $subTar, '-C', (Join-Path $sdir $s.Path))
+    }
+    Set-Content -Encoding ASCII (Join-Path $sdir 'SOURCE-COMMIT.txt') "HT File Hash Checker $version source, commit $commit (HTREASURE submodules included - internal package)."
+} else {
+    $pins = ($subs | ForEach-Object { "  $($_.Path)  commit $($_.Commit)" }) -join "`r`n"
+    $note = "HTREASURE company submodules - not included in this package`r`n`r`nThis product is built with two HTREASURE LTD company repositories, pinned to these commits:`r`n$pins`r`n`r`n" +
+        "They are private HTREASURE LTD repositories and are not part of the public source. Building from source needs access to them:`r`n" +
+        "clone the product with  git clone -c core.longpaths=true --recurse-submodules ...  using an account with HTREASURE-LTD access.`r`n" +
+        "The released installer and portable edition already contain everything needed to run the program.`r`n"
+    New-Item -ItemType Directory -Force (Join-Path $sdir 'external') | Out-Null
+    Set-Content -Encoding UTF8 (Join-Path $sdir 'external\SUBMODULES-NOT-INCLUDED.txt') $note
+    Set-Content -Encoding ASCII (Join-Path $sdir 'SOURCE-COMMIT.txt') "HT File Hash Checker $version source, commit $commit (HTREASURE company submodules not included; see external\SUBMODULES-NOT-INCLUDED.txt)."
 }
-Set-Content -Encoding ASCII (Join-Path $sdir 'SOURCE-COMMIT.txt') "HT File Hash Checker $version source, commit $commit (submodules included)."
 New-Zip $sdir (Join-Path $out "$sname.zip")
 
 # ------------------------------------------------------------------ documentation

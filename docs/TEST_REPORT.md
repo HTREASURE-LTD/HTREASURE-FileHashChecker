@@ -69,8 +69,12 @@ signed; interactive run created `Data\settings.xml`; no change to `%APPDATA%` or
 ## 6. Release packages
 
 All four packages and `SHA256SUMS.txt` built by `scripts\build-release.ps1`; checksums verified with GNU `sha256sum -c`
-(independent of the program); ZIP entries use `/`; source ZIP contains both submodules; no private key, password or
-key file in any package. Setup signed (SHA-256, DigiCert timestamp) by thumbprint `2F352812...0EF2`.
+(independent of the program); ZIP entries use `/`; no private key, password or key file in any package. Setup signed
+(SHA-256, DigiCert timestamp) by thumbprint `2F352812...0EF2`.
+
+After the repository was made public, the published source ZIP was replaced by one that leaves out the private HTREASURE
+submodules (87 files, none from the submodules, listed by commit instead); `SHA256SUMS.txt` and the release notes were
+updated, and the other three packages are unchanged.
 
 ## Not tested
 
